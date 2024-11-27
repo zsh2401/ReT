@@ -1,7 +1,8 @@
 import os
 from mido import MidiFile
-
+import json
 import tqdm
+FILE_NAME = "seq.json"
 
 def find_all_mid_files(directory):
     mid_files = []
@@ -36,13 +37,24 @@ def midi_to_sequence(midi_path):
     return sequence
 
 
-
-_raw_sequence = dict()
+CX = dict()
 
 def seq_of(file):
-    if len(_raw_sequence) == 0:
-        for _file in tqdm.tqdm(midi_files, desc="Building sequences"):
-            _raw_sequence[_file] = midi_to_sequence(_file)
-    return _raw_sequence[file]
+    global CX
+    if len(CX) == 0:
+        CX = load_seq()
+    return CX[file]
 
+def load_seq():
+    with open(FILE_NAME,"r") as f:
+        return json.load(f)
+    
+def build_seq():
+    data = dict()
+    for _file in tqdm.tqdm(midi_files, desc="Building sequences"):
+            data[_file] = midi_to_sequence(_file)
+    
+    with open(FILE_NAME,"w") as f:
+        json.dump(data,f)
+        
 midi_files = find_all_mid_files("./dataset/nesmdb/nesmdb_midi")

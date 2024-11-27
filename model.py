@@ -3,7 +3,7 @@ import torch.nn as nn
 
 
 class MusicTransformer(nn.Module):
-    def __init__(self, vocab_size, embed_dim, num_heads, num_layers, max_len, pad_token):
+    def __init__(self, vocab_size, embed_dim, num_heads, num_layers, max_len, pad_token,dff=2048):
         super(MusicTransformer, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embed_dim, padding_idx=pad_token)
         self.positional_encoding = nn.Parameter(torch.zeros(max_len, embed_dim))
@@ -12,7 +12,7 @@ class MusicTransformer(nn.Module):
             nhead=num_heads,
             num_encoder_layers=num_layers,
             num_decoder_layers=num_layers,
-            dim_feedforward=2048,
+            dim_feedforward=dff,
         )
         self.fc_out = nn.Linear(embed_dim, vocab_size)
         self.pad_token = pad_token

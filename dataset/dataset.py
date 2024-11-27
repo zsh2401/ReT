@@ -1,17 +1,17 @@
 import torch
 
 from dataset.seq import midi_files, seq_of
-from dataset.vocab import V_dict
+from dataset.vocab import  note_to_token
 
 S_len = 2048
 def to_std_seq_vector(seq, s_len=S_len):
-    arr = [V_dict[a] for a in seq]
-    arr.insert(0, V_dict["<BOS>"])
+    arr = [note_to_token(note) for note in seq]
+    arr.insert(0, note_to_token("<BOS>"))
     arr = arr[:s_len - 1]
     if len(arr) < s_len:
-        arr.append(V_dict["<EOS>"])
+        arr.append(note_to_token("<EOS>"))
     while len(arr) < s_len:
-        arr.append(V_dict["<PAD>"])
+        arr.append(note_to_token("<PAD>"))
     return arr
 
 

@@ -21,6 +21,18 @@ def load_vocab():
     with open("vocab.json", "r") as f:
         return json.load(f)
 
+V_dict = dict()
 
-build_vocab()
-V_dict = load_vocab()
+def vocab_size():
+    note_to_token(END_NOTE)
+    return len(V_dict)
+
+def note_to_token(note):
+    global V_dict
+    if len(V_dict) == 0:
+        V_dict = load_vocab()
+    return V_dict[note]
+
+BEGIN_NOTE = "<BOS>"
+END_NOTE = "<EOS>"
+PAD_NOTE = "<PAD>"
