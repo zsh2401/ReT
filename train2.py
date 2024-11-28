@@ -11,9 +11,9 @@ import datetime
 
 # 训练循环
 num_epochs = 200
-batch_size = 28
-embed_dim = 128
-num_heads = 8
+batch_size = 24
+embed_dim = 64
+num_heads = 4
 num_layers = 6
 dff = 2048
 max_len = 2048  # 填充后的最大序列长度
@@ -30,8 +30,7 @@ model = MusicTransformer(vocab_size, embed_dim, num_heads, num_layers, max_len, 
 
 # 忽略 PAD token 的损失
 criterion = nn.CrossEntropyLoss(ignore_index=pad_token).to(device)
-optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
-
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 from torch.utils.data import DataLoader
 
 losses = []
@@ -55,22 +54,23 @@ for epoch in range(start_epoch,num_epochs):
         batch_inputs = batch_inputs.to(device)
         batch_targets = batch_targets.to(device)
 
+        # 准备目标序列
+        tgt_input = batch_inputs
+        tgt_output = batch_targets
 
-        # 生成因果掩码（tgt_mask）
-        tgt_mask = nn.Transformer.generate_square_subsequent_mask(batch_inputs.size(1)).to(device)
+        # 注意力掩码
+        src_padding_mask = (batch_inputs == pad_token)  # 忽略输入的 PAD
+        tgt_padding_mask = (tgt_input == pad_token)    # 忽略目标的 PAD
+        tgt_mask = nn.Transformer.generate_square_subsequent_mask(tgt_input.size(1)).to(batch_inputs.device)
 
-        # 填充掩码（padding_mask）
-        src_padding_mask = (batch_inputs == pad_token).to(device)
-        tgt_padding_mask = (batch_targets == pad_token).to(device)
-            
         # 前向传播
-        outputs = model(batch_inputs, batch_inputs, tgt_mask=tgt_mask, src_padding_mask=src_padding_mask, tgt_padding_mask=tgt_padding_mask)
+        outputs = model(batch_inputs, tgt_input, tgt_mask=tgt_mask, src_padding_mask=src_padding_mask, tgt_padding_mask=tgt_padding_mask)
 
         # 计算损失
-        loss =  loss = criterion(outputs.view(-1, vocab_size), batch_targets.contiguous().view(-1))
+        loss = criterion(outputs.view(-1, vocab_size), tgt_output.view(-1))
         loss.backward()
-        
         optimizer.step()
+
         total_loss += loss.item()
 
     print(f"Epoch {epoch + 1}/{num_epochs}, Loss: {total_loss:.4f}")
@@ -81,4 +81,4 @@ for epoch in range(start_epoch,num_epochs):
         "optimizer":optimizer.state_dict,
         "losses":losses,
         "epoch":epoch
-    },f"checkpoints/[{epoch}][{total_loss:.4f}][{datetime.datetime.now()}].pt")
+    },f"checkpoints/[v2][{epoch}][{total_loss:.4f}][{datetime.datetime.now()}].pt")
