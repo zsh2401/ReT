@@ -13,11 +13,11 @@ import datetime
 TRAIN_CODE = "v2"
 # 训练循环
 num_epochs = 200
-batch_size = 16
-embed_dim = 512
+batch_size = 8
+embed_dim = 256
 num_heads = 8
-num_layers = 6
-dff = 2048
+num_layers = 8
+dff = 1024
 max_len = 2048  # 填充后的最大序列长度
 pad_token = word2idx("<PAD>")
 vocab_size = get_vocab_size()
@@ -40,8 +40,9 @@ def lr_lambda(step):
 
 # 忽略 PAD token 的损失
 criterion = nn.CrossEntropyLoss(ignore_index=pad_token).to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-2, weight_decay=1e-2)
+optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
 scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
+# scheduler = torch.optim.lr_scheduler.
 
 
 from torch.utils.data import DataLoader

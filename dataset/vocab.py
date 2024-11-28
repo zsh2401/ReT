@@ -6,15 +6,17 @@ import tqdm
 
 def build_vocab():
     vocab = set()
-    vocab.add(TOKEN_PAD)
-    vocab.add(TOKEN_BEGIN)
-    vocab.add(TOKEN_END)
+
     for file in tqdm.tqdm(midi_files, desc="Building vocabulary"):
         for note in seq_of(file):
             vocab.add(note)
+            
     import json
 
-    v_dict = {token: idx for idx, token in enumerate(sorted(vocab))}
+    v_dict = {token: idx+3 for idx, token in enumerate(sorted(vocab))}
+    v_dict[TOKEN_PAD] = 0
+    v_dict[TOKEN_BEGIN] = 1
+    v_dict[TOKEN_END] = 2
     with open("vocab.json", "w") as f:
         json.dump(v_dict, f)
 
