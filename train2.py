@@ -40,7 +40,7 @@ def lr_lambda(step):
 
 # 忽略 PAD token 的损失
 criterion = nn.CrossEntropyLoss(ignore_index=pad_token).to(device)
-optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
+optimizer = torch.optim.SGD(model.parameters(), lr=1e-2)
 scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
 # scheduler = torch.optim.lr_scheduler.
 
