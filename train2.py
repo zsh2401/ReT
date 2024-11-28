@@ -13,8 +13,8 @@ import datetime
 TRAIN_CODE = "v2"
 # 训练循环
 num_epochs = 200
-batch_size = 32
-embed_dim = 64
+batch_size = 16
+embed_dim = 512
 num_heads = 8
 num_layers = 6
 dff = 2048
@@ -40,7 +40,7 @@ def lr_lambda(step):
 
 # 忽略 PAD token 的损失
 criterion = nn.CrossEntropyLoss(ignore_index=pad_token).to(device)
-optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-2)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-2, weight_decay=1e-2)
 scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
 
 
@@ -65,15 +65,21 @@ for epoch in range(start_epoch, num_epochs):
     for batch_inputs, batch_targets in tqdm.tqdm(
         dataloader, desc=f"[{TRAIN_CODE}][{epoch}/{num_epochs}] Training"
     ):
-        optimizer.zero_grad()
-
+        
+        # 检查目标序列范围
+        assert torch.max(batch_targets) < vocab_size, "Target token exceeds vocabulary size!"
+        assert torch.min(batch_targets) >= 0, "Target token contains invalid negative index!"
+        
         batch_inputs = batch_inputs.to(device)
         batch_targets = batch_targets.to(device)
 
+        optimizer.zero_grad()
+        
         # 准备目标序列
         tgt_input = batch_inputs
         tgt_output = batch_targets
 
+        # print(torch.max(tgt_output), torch.min(tgt_output))
         # 注意力掩码
         src_padding_mask = batch_inputs == pad_token  # 忽略输入的 PAD
         tgt_padding_mask = tgt_input == pad_token  # 忽略目标的 PAD
@@ -88,11 +94,22 @@ for epoch in range(start_epoch, num_epochs):
             tgt_mask=tgt_mask,
             src_padding_mask=src_padding_mask,
             tgt_padding_mask=tgt_padding_mask,
-        )
+        )   
+        
+        # 检查模型输出
+        assert outputs.shape[-1] == vocab_size, "Output vocabulary size mismatch!"
+        assert not torch.isnan(outputs).any(), "Model outputs contain NaN values!"
 
         # 计算损失
         loss = criterion(outputs.view(-1, vocab_size), tgt_output.view(-1))
+        
+        assert not torch.isnan(loss).any(), "Loss is NaN!"
+        
         loss.backward()
+        
+        # 梯度裁剪
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+        
         optimizer.step()
 
         total_loss += loss.item()
