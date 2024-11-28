@@ -9,13 +9,14 @@ import tqdm
 import sys
 import datetime
 
+TRAIN_CODE = "v1024"
 # 训练循环
 num_epochs = 200
-batch_size = 28
+batch_size = 14
 embed_dim = 128
 num_heads = 8
-num_layers = 6
-dff = 2048
+num_layers = 8
+dff = 1024
 max_len = 2048  # 填充后的最大序列长度
 pad_token = token_to_idx("<PAD>")
 vocab_size = vocab_size()
@@ -49,7 +50,7 @@ dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 for epoch in range(start_epoch,num_epochs):
     model.train()
     total_loss = 0
-    for batch_inputs, batch_targets in tqdm.tqdm(dataloader, desc=f"[{epoch}/{num_epochs}] Training"):
+    for batch_inputs, batch_targets in tqdm.tqdm(dataloader, desc=f"[{epoch}/{num_epochs}][{TRAIN_CODE}] Training"):
         optimizer.zero_grad()
 
         batch_inputs = batch_inputs.to(device)
@@ -81,4 +82,4 @@ for epoch in range(start_epoch,num_epochs):
         "optimizer":optimizer.state_dict,
         "losses":losses,
         "epoch":epoch
-    },f"checkpoints/[{epoch}][{total_loss:.4f}][{datetime.datetime.now()}].pt")
+    },f"checkpoints/[{TRAIN_CODE}][{epoch}][{total_loss:.4f}][{datetime.datetime.now()}].pt")

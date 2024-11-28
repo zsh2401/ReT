@@ -2,7 +2,12 @@ import os
 from mido import MidiFile
 import json
 import tqdm
+
 FILE_NAME = "seq.json"
+S_len = 2048
+TOKEN_BEGIN = "<BOS>"
+TOKEN_END = "<EOS>"
+TOKEN_PAD = "<PAD>"
 
 def find_all_mid_files(directory):
     mid_files = []
@@ -36,19 +41,22 @@ def midi_to_sequence(midi_path):
                 raise Exception(f"Unknown message type: {msg.type}")
     return sequence
 
-
-CX = dict()
-
+in_memory_seq = dict()
 def seq_of(file):
-    global CX
-    if len(CX) == 0:
-        CX = load_seq()
-    return CX[file]
+    '''
+    获取没有经过对齐的，纯字符格式的序列
+    '''
+    global in_memory_seq
+    if len(in_memory_seq) == 0:
+        in_memory_seq = load_seq()
+    return in_memory_seq[file]
 
 def load_seq():
     with open(FILE_NAME,"r") as f:
         return json.load(f)
     
+
+midi_files = find_all_mid_files("./dataset/nesmdb/nesmdb_midi")
 def build_seq():
     data = dict()
     for _file in tqdm.tqdm(midi_files, desc="Building sequences"):
@@ -57,4 +65,17 @@ def build_seq():
     with open(FILE_NAME,"w") as f:
         json.dump(data,f)
         
-midi_files = find_all_mid_files("./dataset/nesmdb/nesmdb_midi")
+
+def pad_seq(raw, s_len:int=S_len):
+    '''
+    将序列进行对齐
+    '''
+    copy = [note for note in raw]
+    copy.insert(0, TOKEN_BEGIN)
+    copy = copy[:s_len - 1]
+    if len(copy) < s_len:
+        copy.append(TOKEN_END)
+    while len(copy) < s_len:
+        copy.append(TOKEN_PAD)
+    return copy
+
