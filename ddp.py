@@ -2,7 +2,7 @@ import torch
 from torch import nn
 
 from dataset.dataset import NesMusicDataset
-from dataset.vocab import  word2idx,vocab_size
+from dataset.vocab import  word2idx,get_vocab_size
 from model import MusicTransformer
 import tqdm
 import sys

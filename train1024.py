@@ -3,7 +3,7 @@ import torch
 from torch import nn
 
 from dataset.dataset import NesMusicDataset
-from dataset.vocab import  word2idx,vocab_size
+from dataset.vocab import  word2idx,get_vocab_size
 from model import MusicTransformer
 import tqdm
 import sys
@@ -19,7 +19,7 @@ num_layers = 8
 dff = 1024
 max_len = 2048  # 填充后的最大序列长度
 pad_token = word2idx("<PAD>")
-vocab_size = vocab_size()
+get_vocab_size = get_vocab_size()
 device = "cpu"
 if torch.mps.is_available():
     device = "mps"
@@ -27,7 +27,7 @@ elif torch.cuda.is_available():
     device = "cuda"
 
 # 初始化模型
-model = MusicTransformer(vocab_size, embed_dim, num_heads, num_layers, max_len, pad_token,dff).to(device)
+model = MusicTransformer(get_vocab_size, embed_dim, num_heads, num_layers, max_len, pad_token,dff).to(device)
 
 # 忽略 PAD token 的损失
 criterion = nn.CrossEntropyLoss(ignore_index=pad_token).to(device)
@@ -68,7 +68,7 @@ for epoch in range(start_epoch,num_epochs):
         outputs = model(batch_inputs, batch_inputs, tgt_mask=tgt_mask, src_padding_mask=src_padding_mask, tgt_padding_mask=tgt_padding_mask)
 
         # 计算损失
-        loss =  loss = criterion(outputs.view(-1, vocab_size), batch_targets.contiguous().view(-1))
+        loss =  loss = criterion(outputs.view(-1, get_vocab_size), batch_targets.contiguous().view(-1))
         loss.backward()
         
         optimizer.step()

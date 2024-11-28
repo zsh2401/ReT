@@ -25,13 +25,13 @@ def load_vocab():
 
 
 
-def vocab_size():
-    word2idx("")
+def get_vocab_size():
+    __init_in_memory()
     return len(_in_memory_word2idx)
 
 _in_memory_word2idx = dict()
 _in_memory_idx2word = dict()
-def __init():
+def __init_in_memory():
     global _in_memory_word2idx
     if len(_in_memory_word2idx) == 0:
         _in_memory_word2idx = load_vocab()
@@ -39,11 +39,11 @@ def __init():
             _in_memory_idx2word[v] = k
             
 def word2idx(token):
-    __init()
+    __init_in_memory()
     return _in_memory_word2idx[token]
 
 def idx2word(idx:int):
-    __init()
+    __init_in_memory()
     return _in_memory_idx2word[idx]
             
 def translate_seq(seq):
