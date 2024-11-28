@@ -3,7 +3,7 @@ import torch
 from torch import nn
 
 from dataset.dataset import NesMusicDataset
-from dataset.vocab import  token_to_idx,vocab_size
+from dataset.vocab import  word2idx,vocab_size
 from model import MusicTransformer
 import tqdm
 import sys
@@ -17,7 +17,7 @@ num_heads = 8
 num_layers = 6
 dff = 2048
 max_len = 2048  # 填充后的最大序列长度
-pad_token = token_to_idx("<PAD>")
+pad_token = word2idx("<PAD>")
 vocab_size = vocab_size()
 device = "cpu"
 if torch.mps.is_available():

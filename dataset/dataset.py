@@ -7,6 +7,7 @@ from dataset.vocab import translate_seq
 class NesMusicDataset(torch.utils.data.Dataset):
     def __init__(self):
         super(NesMusicDataset, self).__init__()
+        self.cache = {}
 
     def __len__(self):
         return len(midi_files)

@@ -2,7 +2,7 @@ import torch
 from torch import nn
 
 from dataset.dataset import NesMusicDataset
-from dataset.vocab import  token_to_idx,vocab_size
+from dataset.vocab import  word2idx,vocab_size
 from model import MusicTransformer
 import tqdm
 import sys
@@ -82,7 +82,7 @@ if __name__ == "__main__":
         'num_heads': 8,
         'num_layers': 6,
         'max_len': 2048,
-        'pad_token': token_to_idx("<PAD>"),
+        'pad_token': word2idx("<PAD>"),
         'epochs': 100
     }
 

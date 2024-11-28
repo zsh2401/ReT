@@ -26,15 +26,25 @@ def load_vocab():
 
 
 def vocab_size():
-    token_to_idx("")
-    return len(_in_memory_dict)
+    word2idx("")
+    return len(_in_memory_word2idx)
 
-_in_memory_dict = dict()
-def token_to_idx(note):
-    global _in_memory_dict
-    if len(_in_memory_dict) == 0:
-        _in_memory_dict = load_vocab()
-    return _in_memory_dict[note]
+_in_memory_word2idx = dict()
+_in_memory_idx2word = dict()
+def __init():
+    global _in_memory_word2idx
+    if len(_in_memory_word2idx) == 0:
+        _in_memory_word2idx = load_vocab()
+        for k,v in _in_memory_word2idx.items():
+            _in_memory_idx2word[v] = k
+            
+def word2idx(token):
+    __init()
+    return _in_memory_word2idx[token]
 
+def idx2word(idx:int):
+    __init()
+    return _in_memory_idx2word[idx]
+            
 def translate_seq(seq):
-    return [token_to_idx(note) for note in seq]
+    return [word2idx(note) for note in seq]
