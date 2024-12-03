@@ -1,13 +1,13 @@
 import json
 
-from dataset.seq import TOKEN_BEGIN, TOKEN_END, TOKEN_PAD, midi_files, seq_of
+from dataset.seq import TOKEN_BEGIN, TOKEN_END, TOKEN_PAD, get_all_midi, seq_of
 import tqdm
 
 
 def build_vocab():
     vocab = set()
 
-    for file in tqdm.tqdm(midi_files, desc="Building vocabulary"):
+    for file in tqdm.tqdm(get_all_midi(), desc="Building vocabulary"):
         for note in seq_of(file):
             vocab.add(note)
             
@@ -50,3 +50,6 @@ def idx2word(idx:int):
             
 def translate_seq(seq):
     return [word2idx(note) for note in seq]
+
+def idx_seq_to_word_seq(idx_seq):
+    return [idx2word(idx) for idx in idx_seq]
