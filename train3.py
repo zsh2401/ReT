@@ -9,12 +9,17 @@ from model import MusicTransformer
 import tqdm
 import sys
 import datetime
+from torch.utils.data import DataLoader
 
-TRAIN_CODE = "v2"
+from model2 import MusicTransformer2
+
+TRAIN_CODE = "v3-with-decoder-only"
+
 # 训练循环
 num_epochs = 200
-batch_size = 8
-embed_dim = 256
+batch_size = 64
+seq_len = 1024
+embed_dim = 512
 num_heads = 8
 num_layers = 6
 dff = 1024
@@ -22,15 +27,17 @@ max_len = 2048  # 填充后的最大序列长度
 pad_token = word2idx("<PAD>")
 vocab_size = get_vocab_size()
 device = "cpu"
+
 if torch.mps.is_available():
     device = "mps"
 elif torch.cuda.is_available():
     device = "cuda"
 
+dataset = NesMusicDataset(seq_len=seq_len)
+dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
 # 初始化模型
-model = MusicTransformer(
-    vocab_size, embed_dim, num_heads, num_layers, max_len, pad_token, dff
-).to(device)
+model = MusicTransformer2(vocab_size, embed_dim, num_heads, num_layers, dff).to(device)
 
 
 def lr_lambda(step):
@@ -40,12 +47,13 @@ def lr_lambda(step):
 
 # 忽略 PAD token 的损失
 criterion = nn.CrossEntropyLoss(ignore_index=pad_token).to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-2)
-scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+# scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
 # scheduler = torch.optim.lr_scheduler.
 
 
-from torch.utils.data import DataLoader
+
 
 losses = []
 start_epoch = 0
@@ -58,59 +66,59 @@ if len(sys.argv) > 1:
     scheduler.load_state_dict(checkpoint["scheduler"])
     start_epoch = checkpoint["epoch"]
 
-dataset = NesMusicDataset()
-dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
 for epoch in range(start_epoch, num_epochs):
     model.train()
     total_loss = 0
     for batch_inputs, batch_targets in tqdm.tqdm(
         dataloader, desc=f"[{TRAIN_CODE}][{epoch}/{num_epochs}] Training"
     ):
-        
+
         # 检查目标序列范围
-        assert torch.max(batch_targets) < vocab_size, "Target token exceeds vocabulary size!"
-        assert torch.min(batch_targets) >= 0, "Target token contains invalid negative index!"
-        
-        batch_inputs = batch_inputs.to(device)
-        batch_targets = batch_targets.to(device)
+        assert (
+            torch.max(batch_targets) < vocab_size
+        ), "Target token exceeds vocabulary size!"
+        assert (
+            torch.min(batch_targets) >= 0
+        ), "Target token contains invalid negative index!"
 
-        optimizer.zero_grad()
-        
-        # 准备目标序列
-        tgt_input = batch_inputs
-        tgt_output = batch_targets
+        input_seq = batch_inputs.to(device).transpose(0, 1)
+        target_seq = batch_targets.to(device).transpose(0, 1)
 
-        # print(torch.max(tgt_output), torch.min(tgt_output))
-        # 注意力掩码
-        src_padding_mask = batch_inputs == pad_token  # 忽略输入的 PAD
-        tgt_padding_mask = tgt_input == pad_token  # 忽略目标的 PAD
-        tgt_mask = nn.Transformer.generate_square_subsequent_mask(tgt_input.size(1)).to(
-            batch_inputs.device
-        )
+        # # 准备目标序列
+        # tgt_input = batch_inputs
+        # tgt_output = batch_targets
+
+        # # print(torch.max(tgt_output), torch.min(tgt_output))
+        # # 注意力掩码
+        # src_padding_mask = batch_inputs == pad_token  # 忽略输入的 PAD
+        # tgt_padding_mask = tgt_input == pad_token  # 忽略目标的 PAD
+        # tgt_mask = nn.Transformer.generate_square_subsequent_mask(tgt_input.size(1)).to(
+        #     batch_inputs.device
+        # )
 
         # 前向传播
-        outputs = model(
-            batch_inputs,
-            tgt_input,
-            tgt_mask=tgt_mask,
-            src_padding_mask=src_padding_mask,
-            tgt_padding_mask=tgt_padding_mask,
-        )   
-        
+        Y_pred = model(input_seq)
+        Y_pred = Y_pred.view(-1, vocab_size)
+        Y = target_seq.contiguous().view(-1)
+
+        # print("Output logits range:", Y_pred.min().item(), Y_pred.max().item())
+
         # 检查模型输出
-        assert outputs.shape[-1] == vocab_size, "Output vocabulary size mismatch!"
-        assert not torch.isnan(outputs).any(), "Model outputs contain NaN values!"
+        assert Y_pred.shape[-1] == vocab_size, "Output vocabulary size mismatch!"
+        assert not torch.isnan(Y_pred).any(), "Model outputs contain NaN values!"
 
         # 计算损失
-        loss = criterion(outputs.view(-1, vocab_size), tgt_output.view(-1))
-        
+        loss = criterion(Y_pred, Y)
+
         assert not torch.isnan(loss).any(), "Loss is NaN!"
-        
+
+        optimizer.zero_grad()
         loss.backward()
-        
+
         # 梯度裁剪
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-        
+
         optimizer.step()
 
         total_loss += loss.item()
