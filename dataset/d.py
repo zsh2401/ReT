@@ -1,7 +1,8 @@
+from dataset.tokenization2 import tokenize2
 from seq import tokenize_mid_file
 import math
 
-seq = tokenize_mid_file("lmd/lmd_full/0/0a0ce238fb8c672549f77f3b692ebf32.mid")
+seq = tokenize2("lmd/lmd_full/0/0a0ce238fb8c672549f77f3b692ebf32.mid")
 # print(seq)
 
 

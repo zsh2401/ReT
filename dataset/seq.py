@@ -69,7 +69,7 @@ def __midi_preprocess_worker(chunk, result_queue):
             start = time.time()
             tokens = tokenize_mid_file(_file)
             end = time.time()
-            print(f"{os.getpid()} used {end - start}s")
+            # print(f"{os.getpid()} used {end - start}s")
             result_queue.put(("success", os.getpid(), _file, {"seq": tokens}))
         except Exception as e:
             result_queue.put(("error", os.getpid(), f"{e}"))
@@ -101,7 +101,7 @@ def build_seq():
         for chunk in midi_files_chunks:
             p = Process(
                 target=__midi_preprocess_worker,
-                args=(chunk, result_queue,__time_to_tokens_cache),
+                args=(chunk, result_queue),
             )
             processes.append(p)
             p.start()
