@@ -21,21 +21,18 @@ def find_all_mid_files(directory):
     return mid_files
 
 
-midi_files = find_all_mid_files(PATH_TO_MIDI)
-
-
-def midi_to_sequence(midi_path):
+def midi_to_token_seq(midi_path):
     midi = MidiFile(midi_path)
     from dataset.tokenization import tokenize
 
     return tokenize(midi)
 
 
-def seq_of(file):
+def get_seq_by_file_name(file):
     """
     获取没有经过对齐的，纯字符格式的序列
     """
-    return get_all_seqs()[file]
+    return get_all_seqs()[file]["seq"]
 
 
 __in_memory_seq = None
@@ -47,6 +44,11 @@ def get_all_seqs():
     return __in_memory_seq
 
 
+def calculate_avg_len():
+    sum = 0
+    for seq in get_all_seqs():
+        sum += len(seq)
+        
 def all_seq_size():
     return len(get_all_seqs())
 
@@ -59,7 +61,7 @@ def load_seq():
 def __midi_preprocess_worker(shared_data_dict, chunk, signal_queue):
     for _file in chunk:
         try:
-            seq = midi_to_sequence(_file)
+            seq = midi_to_token_seq(_file)
             shared_data_dict[_file] = {
                 "seq": seq,
             }
@@ -118,7 +120,7 @@ def pad_seq(raw, s_len: int = S_len):
     """
     将序列进行对齐
     """
-    copy = [note for note in raw]
+    copy = [token for token in raw]
     copy.insert(0, TOKEN_BEGIN)
     copy = copy[: s_len - 1]
     if len(copy) < s_len:

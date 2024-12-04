@@ -1,7 +1,7 @@
-from seq import midi_to_sequence
+from seq import midi_to_token_seq
 import math
 
-seq = midi_to_sequence("lmd/lmd_full/0/0a0ce238fb8c672549f77f3b692ebf32.mid")
+seq = midi_to_token_seq("lmd/lmd_full/0/0a0ce238fb8c672549f77f3b692ebf32.mid")
 # print(seq)
 
 

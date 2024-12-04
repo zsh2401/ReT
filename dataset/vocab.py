@@ -1,6 +1,6 @@
 import json
 
-from dataset.seq import TOKEN_BEGIN, TOKEN_END, TOKEN_PAD, get_all_seqs, seq_of
+from dataset.seq import TOKEN_BEGIN, TOKEN_END, TOKEN_PAD, get_all_seqs, get_seq_by_file_name
 import tqdm
 VOCAB_FILE = "vocab.json"
 

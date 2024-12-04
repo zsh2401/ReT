@@ -1,6 +1,6 @@
 import torch
 
-from dataset.seq import all_seq_size, midi_files, pad_seq, seq_of
+from dataset.seq import all_seq_size, midi_files, pad_seq, get_seq_by_file_name
 from dataset.vocab import idx_seq_to_token_seq, token_seq_to_idx_seq
 
 
@@ -15,7 +15,7 @@ class NesMusicDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         
-        seq = seq_of(midi_files[idx])
+        seq = get_seq_by_file_name(midi_files[idx])
         seq = pad_seq(seq, self.seq_len)
         seq = token_seq_to_idx_seq(seq)
         
