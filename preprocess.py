@@ -4,10 +4,11 @@ from dataset.seq import build_seq, load_seq, pad_seq
 from dataset.vocab import build_vocab
 import tqdm
 
+if __name__ == '__main__':
 # for i in tqdm.tqdm(range(3000),desc="Heating time to tokens algorithms"):
 #     time_to_tokens(i)
 # for i in tqdm.tqdm(range(3000),desc="Testing time to tokens cache"):
 #     time_to_tokens(i) 
-build_seq()
-build_vocab()
+    build_seq()
+    build_vocab()
 
