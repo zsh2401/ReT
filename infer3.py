@@ -1,6 +1,6 @@
 import sys
 import torch
-from dataset.vocab import get_vocab_size, idx_seq_to_word_seq, word2idx
+from dataset.vocab import get_vocab_size, idx_seq_to_token_seq, word2idx
 from model2 import MusicTransformer2  # 假设你的模型定义在 model.py 中
 
 # from midi_utils import save_midi  # 假设你有一个 save_midi 工具函数将序列保存为 MIDI
@@ -87,7 +87,7 @@ if __name__ == "__main__":
         model, start_token, max_len=max_len, eos_token=eos_token, device=device
     )
     
-    print("Generated sequence:", idx_seq_to_word_seq(generated_sequence))
+    print("Generated sequence:", idx_seq_to_token_seq(generated_sequence))
 
     # 保存为 MIDI 文件
     # output_midi_path = "generated_music.mid"
