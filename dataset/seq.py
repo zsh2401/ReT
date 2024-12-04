@@ -25,50 +25,9 @@ midi_files = find_all_mid_files(PATH_TO_MIDI)
 
 
 def midi_to_sequence(midi_path):
-    '''
-    将midi专为token序列，重中之重的一步。
-    '''
-    
-    # def map_pitchwheel(current:int, lowest: int=-8192, highest: int=8192, max_uint: int=127):
-    #     import math
-    #     range = highest - lowest
-    #     position = (current - lowest) / range
-    #     return math.floor(position * max_uint)
-    
     midi = MidiFile(midi_path)
-    sequence = []
-    for track in midi.tracks:
-        current_time = 0
-        for msg in track:
-            print(msg)
-            if msg.is_meta:
-                continue
-            if msg.type == "note_on" and msg.velocity > 0:
-                sequence.append(f"Note_On_{msg.note}")
-                sequence.append(f"VELOCITY_{msg.velocity}")
-            elif msg.type == "note_off" or (
-                msg.type == "note_on" and msg.velocity == 0
-            ):
-                sequence.append(f"Note_Off_{msg.note}")
-            elif msg.type == "control_change":
-                sequence.append(f"Control_{msg.control}_{msg.value}")
-            elif msg.type == "program_change":
-                sequence.append(f"Program_{msg.program}")
-            elif msg.type == "time_signature":
-                sequence.append(f"Time_Signature_{msg.numerator}/{msg.denominator}")
-            elif msg.type == "set_tempo":
-                sequence.append(f"Tempo_{msg.tempo}")
-            elif msg.type == "sysex":
-                # 跳过sysex
-                pass
-            elif msg.type == "pitchwheel":
-                # print(msg)
-                sequence.append(f"Pitchwheel_{msg.pitch}")
-            else:
-                raise Exception(f"Unknown message type: {msg.type}")
-            
-    return sequence
-
+    from dataset.tokenization import tokenize
+    return tokenize(midi)
 
 def seq_of(file):
     """

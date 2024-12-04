@@ -5,3 +5,6 @@ __pycache__
 checkpoints
 *.pt
 *.json
+*.mid
+*.wav
+*.sf2
