@@ -10,10 +10,10 @@ _in_memory_idx2word = dict()
 
 def build_vocab():
     vocab = set()
-    for seq in get_all_seqs():
-        for token in seq:
+    for k,v in tqdm.tqdm(get_all_seqs().items(),desc="Building vocabulary"):
+        for token in v["seq"]:
             vocab.add(token)
-            
+    
     import json
 
     v_dict = {token: idx+3 for idx, token in enumerate(sorted(vocab))}

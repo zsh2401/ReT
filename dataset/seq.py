@@ -2,10 +2,12 @@ import os
 from mido import MidiFile
 import json
 import tqdm
+from dataset.tokenization import tokenize, __time_to_tokens_cache
+from dataset.tokenization2 import tokenize2
 
 FILE_NAME = "seq.json"
-# PATH_TO_MIDI = "./dataset/nesmdb/nesmdb_midi"
-PATH_TO_MIDI = "./dataset/lmd/"
+# PATH_TO_MIDI = "./dataset/lmd"
+PATH_TO_MIDI = "./dataset/nesmdb/nesmdb_midi/nesmdb_midi/test"
 S_len = 2048
 TOKEN_BEGIN = "<BOS>"
 TOKEN_END = "<EOS>"
@@ -21,11 +23,10 @@ def find_all_mid_files(directory):
     return mid_files
 
 
-def midi_to_token_seq(midi_path):
-    midi = MidiFile(midi_path)
-    from dataset.tokenization import tokenize
-
-    return tokenize(midi)
+def tokenize_mid_file(midi_path):
+    return tokenize2(midi_path)
+    # midi = MidiFile(midi_path)
+    # return tokenize(midi, shared_ttt_cache)
 
 
 def get_seq_by_file_name(file):
@@ -36,6 +37,7 @@ def get_seq_by_file_name(file):
 
 
 __in_memory_seq = None
+
 
 def get_all_seqs():
     global __in_memory_seq
@@ -48,7 +50,8 @@ def calculate_avg_len():
     sum = 0
     for seq in get_all_seqs():
         sum += len(seq)
-        
+
+
 def all_seq_size():
     return len(get_all_seqs())
 
@@ -58,22 +61,26 @@ def load_seq():
         return json.load(f)
 
 
-def __midi_preprocess_worker(shared_data_dict, chunk, signal_queue):
+def __midi_preprocess_worker(chunk, result_queue):
+    import os
+    import time
     for _file in chunk:
         try:
-            seq = midi_to_token_seq(_file)
-            shared_data_dict[_file] = {
-                "seq": seq,
-            }
+            start = time.time()
+            tokens = tokenize_mid_file(_file)
+            end = time.time()
+            print(f"{os.getpid()} used {end - start}s")
+            result_queue.put(("success", os.getpid(), _file, {"seq": tokens}))
         except Exception as e:
-            pass
-        finally:
-            signal_queue.put(1)
+            result_queue.put(("error", os.getpid(), f"{e}"))
 
 
 def build_seq():
-    """ """
+    """
+    构建序列化文件
+    """
     import os
+
     import numpy as np
 
     # import threading
@@ -82,19 +89,19 @@ def build_seq():
     import math
 
     process_count = math.ceil(psutil.cpu_count(logical=True) * 1)
-
     midi_files = find_all_mid_files(PATH_TO_MIDI)
     midi_files_chunks = np.array_split(midi_files, process_count)
+    # print(len(mi))
 
+    final_seq_data = dict()
     with Manager() as manager:
-        signal_queue = manager.Queue()
-        shared_dict = manager.dict()
+        result_queue = manager.Queue()
         processes = []
 
         for chunk in midi_files_chunks:
             p = Process(
                 target=__midi_preprocess_worker,
-                args=(shared_dict, chunk, signal_queue),
+                args=(chunk, result_queue,__time_to_tokens_cache),
             )
             processes.append(p)
             p.start()
@@ -105,15 +112,20 @@ def build_seq():
         ) as progress_bar:
             completed = 0
             while completed < len(midi_files):
-                sig = signal_queue.get()
-                completed += sig
-                progress_bar.update(sig)
+                task_result = result_queue.get()
+                # print(f"message from {task_result[1]}")
+                if task_result[0] == "success":
+                    final_seq_data[task_result[2]] = task_result[3]
+                else:
+                    pass
+                completed += 1
+                progress_bar.update(1)
 
         for p in processes:
             p.join()
 
         with open(FILE_NAME, "w") as f:
-            json.dump(shared_dict, f)
+            json.dump(final_seq_data, f)
 
 
 def pad_seq(raw, s_len: int = S_len):
