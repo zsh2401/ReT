@@ -79,11 +79,8 @@ def build_seq():
     """
     构建序列化文件
     """
-    import os
-
     import numpy as np
 
-    # import threading
     from multiprocessing import Process, Manager, Pipe
     import psutil
     import math

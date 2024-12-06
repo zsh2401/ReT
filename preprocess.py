@@ -9,6 +9,6 @@ if __name__ == '__main__':
 #     time_to_tokens(i)
 # for i in tqdm.tqdm(range(3000),desc="Testing time to tokens cache"):
 #     time_to_tokens(i) 
-    build_seq()
-    build_vocab()
+#     build_seq()
+#     build_vocab()
 
