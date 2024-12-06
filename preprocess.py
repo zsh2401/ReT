@@ -1,14 +1,18 @@
-
-from dataset.seq import build_seq, load_seq, pad_seq
-# from dataset.tokenization import time_to_tokens
-from dataset.vocab import build_vocab
+from miditok import REMI, TokenizerConfig
+from miditok.pytorch_data import DatasetMIDI
+from symusic import Score
+from torch.utils.data import DataLoader
+from pathlib import Path
 import tqdm
 
+def tokenize():
+    config = TokenizerConfig(num_velocities=16, use_chords=True, use_programs=True)
+    tokenizer = REMI(config)
+    files_paths = list(Path("dataset").glob("**/*.mid"))
+    print(f"There are {len(files_paths)} mid files.")
+    tokenizer.train(vocab_size=30000, files_paths=files_paths)
+    tokenizer.save("tokenizer.json")
+
 if __name__ == '__main__':
-# for i in tqdm.tqdm(range(3000),desc="Heating time to tokens algorithms"):
-#     time_to_tokens(i)
-# for i in tqdm.tqdm(range(3000),desc="Testing time to tokens cache"):
-#     time_to_tokens(i) 
-#     build_seq()
-#     build_vocab()
+    tokenize()
 
