@@ -31,7 +31,7 @@ class MusicTransformer2(nn.Module):
         pe = pe.unsqueeze(0)
         return pe
 
-    def forward(self, target, memory=None):
+    def forward(self, target, tgt_mask=None, memory=None):
         """
         Forward pass for the model.
         Args:
@@ -43,6 +43,7 @@ class MusicTransformer2(nn.Module):
 
         # Embedding and positional encoding
         x = self.embedding(target)
+        # print(target.shape)
         x *= math.sqrt(self.d_model)
         
         # print(x.shape,self.positional_encoding.shape,self.positional_encoding[:tgt_len, :].shape)
@@ -52,14 +53,16 @@ class MusicTransformer2(nn.Module):
         # print(x.shape)
 
         # Mask for causal attention
-        tgt_mask = nn.Transformer.generate_square_subsequent_mask(tgt_len).to(target.device)
+        if tgt_mask is None:
+            tgt_mask = nn.Transformer.generate_square_subsequent_mask(tgt_len).to(target.device)
 
-        # if memory is None:
-        memory = torch.zeros(1, batch_size, self.d_model, device=x.device)
+        if memory is None:
+            memory = torch.zeros(1, batch_size, self.d_model, device=x.device)
             
         # Decode
         decoder_output = self.decoder(x, memory=memory,tgt_mask=tgt_mask)
 
+        # print(decoder_output)
         # Final output projection
         output = self.fc_out(decoder_output)
         return output
