@@ -13,7 +13,7 @@ NES_TRAIN_DATASET_PATH = "dataset/nesmdb/nesmdb_midi/nesmdb_midi/train"
 
 
 def dataset_from(path: str, batch_size=64, max_seq_len=2048,ddp=False):
-    config = TokenizerConfig(num_velocities=16, use_chords=True, use_programs=True)
+    config = TokenizerConfig(num_velocities=64, use_chords=True, use_programs=True)
     print("Scanning files.")
     files_paths = list(Path(path).glob("**/*.mid"))
     print(f"Scanned, there are {len(files_paths)} files")

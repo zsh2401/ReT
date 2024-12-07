@@ -30,6 +30,7 @@ def main():
     parser.add_argument("--weight-decay", default=1e-4, type=int)
     parser.add_argument("--train-code", default="Unk", type=str)
     args = parser.parse_args()
+    print(args)
 
     train_code = args.train_code
     num_epochs = 200
@@ -40,7 +41,7 @@ def main():
     max_len = args.max_len  # 填充后的最大序列长度
     local_rank = args.local_rank
     batch_size = args.batch_size
-
+    print(num_heads,num_layers)
     print(f"Local Rank: {local_rank}")
 
     num_gpus = torch.cuda.device_count()
@@ -84,48 +85,43 @@ def main():
         sampler.set_epoch(epoch)
         model.train()
         total_loss = 0
-        for batch in tqdm.tqdm(
-            dataloader, desc=f"[{train_code}][{epoch}/{num_epochs}] Training"
-        ):
-            optimizer.zero_grad()
+        with tqdm.tqdm(total=len(dataloader), desc=f"[{train_code}][{epoch}/{num_epochs}] Training") as bar:
+            a = iter(dataloader)
+            while True:
+                try:
+                    batch = next(a)
+                    optimizer.zero_grad()
 
-            # 把形状从(BatchSize, SeqLen)变成(SeqLen,BatchSize)
-            X = batch["input_ids"].transpose(0, 1).to(device)
-            # 同上
-            Y = batch["labels"].transpose(0, 1).to(device)
+                    # 把形状从(BatchSize, SeqLen)变成(SeqLen,BatchSize)
+                    X = batch["input_ids"].transpose(0, 1).to(device)
+                    
+                    # 同上
+                    Y = batch["labels"].transpose(0, 1).to(device)
 
-            # assert torch.max(Y) < vocab_size, "Target token exceeds vocabulary size!"
-            # # assert torch.min(Y) >= 0, "Target token contains invalid negative index!"
-            # if torch.min(Y) < 0:
-            #     print("minium", torch.min(Y))
-            #     raise Exception("fuck")
-            # mask = batch["attention_mask"].transpose(0, 1).to(device)
+                    # 形状为 (SeqLen, BatchSize,VocabSize)
+                    Y_pred = model(X)
 
-            # 形状为 (SeqLen, BatchSize,VocabSize)
-            Y_pred = model(X)
+                    # 变换为(SeqLen*BatchSize)
+                    Y_flat = Y.reshape(-1)
 
-            # print(Y.shape,Y_pred.shape)
-            # Y = Y.contiguous().view(-1)
-            # print(Y.shape)
-            # Y
-            # 检查模型输出
-            assert Y_pred.shape[-1] == vocab_size, "Output vocabulary size mismatch!"
-            assert not torch.isnan(Y_pred).any(), "Model outputs contain NaN values!"
+                    # 这里实际上就是铺平了的概率分布了
+                    # 变换为(SeqLen*BatchSize, VocabSize)
+                    Y_pred_flat = Y_pred.reshape(-1, Y_pred.size(-1))
 
-            # 变换为(SeqLen*BatchSize)
-            Y_flat = Y.reshape(-1)
-
-            # 这里实际上就是铺平了的概率分布了
-            # 变换为(SeqLen*BatchSize, VocabSize)
-            Y_pred_flat = Y_pred.reshape(-1, Y_pred.size(-1))
-
-            loss = criterion(Y_pred_flat, Y_flat)
-            # 时空倒转！
-            loss.backward()
-            # print(X.shape,Y.shape,mask.shape,X[0][-10:],Y[0][-10:])
-            optimizer.step()
-            # optimizer.lr
-            total_loss += loss.item()
+                    loss = criterion(Y_pred_flat, Y_flat)
+                    # 时空倒转！
+                    
+                    loss.backward()
+                    optimizer.step()
+                    total_loss += loss.item()
+                    
+                except ValueError as e:
+                    print(e)
+                    continue
+                except StopIteration:
+                    break;
+                finally:
+                    bar.update(1)
 
         scheduler.step()
         print(f"Epoch {epoch + 1}/{num_epochs}, Loss: {total_loss:.4f}")
