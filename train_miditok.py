@@ -9,17 +9,17 @@ import datetime
 
 from model2 import MusicTransformer2
 
-TRAIN_CODE = "v3"
+TRAIN_CODE = "v4"
 # 训练循环
 num_epochs = 200
-batch_size = 128
+batch_size = 56
 embed_dim = 512
 num_heads = 8
 num_layers = 8
 dff = 2048
 max_len = 2048  # 填充后的最大序列长度
 dataset, dataloader, vocab_size, pad_token = dataset_from(
-    path=NES_TRAIN_DATASET_PATH, max_seq_len=max_len, batch_size=batch_size
+    path=LMD_DATASET_PATH, max_seq_len=max_len, batch_size=batch_size
 )
 
 device = "cpu"
@@ -43,8 +43,8 @@ def lr_lambda(step):
 
 # 忽略 PAD token 的损失
 criterion = nn.CrossEntropyLoss(ignore_index=pad_token).to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-2, weight_decay=1e-2)
-scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
+optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4,weight_decay=1e-4)
+scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer,gamma=0.99)
 
 losses = []
 start_epoch = 0
@@ -100,6 +100,7 @@ for epoch in range(start_epoch, num_epochs):
         loss.backward()
         # print(X.shape,Y.shape,mask.shape,X[0][-10:],Y[0][-10:])
         optimizer.step()
+        # optimizer.lr
         total_loss += loss.item()
 
     scheduler.step()
