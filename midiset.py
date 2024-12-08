@@ -43,6 +43,9 @@ def random_pick(
 
     return train_set, val_set, test_set
 
+def tokenizer_():
+    config = TokenizerConfig(num_velocities=64, use_chords=True, use_programs=True)
+    return REMI(config)
 
 def dataset_from(path: str, batch_size=64, max_seq_len=2048, ddp=False):
     config = TokenizerConfig(num_velocities=64, use_chords=True, use_programs=True)

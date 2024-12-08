@@ -27,8 +27,7 @@ def main():
     parser.add_argument("--lr", default="1e-4", type=str)
     parser.add_argument("--weight-decay", default="1e-4", type=str)
     parser.add_argument("--train-code", default="Unk", type=str)
-    # parser.add_argument("")
-    # parser.add_argument("")
+    parser.add_argument("--mode",default="train",type=str)
     args = parser.parse_args()
     print(args)
 
@@ -99,7 +98,6 @@ def main():
         losses = checkpoint["losses"]
         scheduler.load_state_dict(checkpoint["scheduler"])
         start_epoch = checkpoint["epoch"]
-
     def train(epoch:int):
         
         if isinstance(train_sampler, DistributedSampler):
