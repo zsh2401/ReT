@@ -32,7 +32,7 @@ def main():
     model =  MusicTransformer2(args.vocab_size, args.embed_dim, args.num_heads, args.num_layers, args.dff).to(
         device
     )
-    checkpoint = torch.load(args.check_point)
+    checkpoint = torch.load(args.check_point,map_location=device)
     model.load_state_dict(checkpoint["model"])
     model.eval()
     

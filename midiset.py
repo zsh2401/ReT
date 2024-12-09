@@ -47,7 +47,14 @@ def tokenizer_():
     config = TokenizerConfig(num_velocities=64, use_chords=True, use_programs=True)
     return REMI(config)
 
-def dataset_from(path: str, batch_size=64, max_seq_len=2048, ddp=False):
+def dataset_from(path: str,
+                 batch_size=64,
+                 max_seq_len=2048,
+                 ddp=False,
+                    train_ratio: float = 0.8,
+                    val_ratio: float = 0.1,
+                    test_ratio: float = 0.1,
+                 ):
     config = TokenizerConfig(num_velocities=64, use_chords=True, use_programs=True)
     print("Scanning files.")
     files_paths = list(Path(path).glob("**/*.mid"))
@@ -56,7 +63,7 @@ def dataset_from(path: str, batch_size=64, max_seq_len=2048, ddp=False):
     print("Loading tokenizer...")
     # tokenizer.from_pretrained("tokenizer.json")
     print("Loaded into memory.")
-    train_files, val_files, test_files = random_pick(files_paths)
+    train_files, val_files, test_files = random_pick(files_paths,train_ratio,val_ratio,test_ratio)
 
     train_dataset = DatasetMIDI(
         files_paths=train_files,
