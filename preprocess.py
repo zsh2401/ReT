@@ -10,6 +10,7 @@ def tokenize():
     tokenizer = REMI(config)
     files_paths = list(Path("dataset").glob("**/*.mid"))
     print(f"There are {len(files_paths)} mid files.")
+    # files_paths = tqdm.tqdm(files_paths)
     tokenizer.train(vocab_size=30000, files_paths=files_paths)
     tokenizer.save("tokenizer.json")
 
