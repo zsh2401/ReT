@@ -10,6 +10,8 @@ import random
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import RandomSampler
 
+from t3.dataset import MDataset
+
 LMD_DATASET_PATH = "dataset/lmd"
 NES_TRAIN_DATASET_PATH = "dataset/nesmdb/nesmdb_midi/nesmdb_midi/train"
 
@@ -65,43 +67,45 @@ def dataset_from(path: str,
     print("Loaded into memory.")
     train_files, val_files, test_files = random_pick(files_paths,train_ratio,val_ratio,test_ratio)
 
-    train_dataset = DatasetMIDI(
-        files_paths=train_files,
-        tokenizer=tokenizer,
-        max_seq_len=max_seq_len,
-        bos_token_id=tokenizer["BOS_None"],
-        eos_token_id=tokenizer["EOS_None"],
-    )
-    val_dataset = DatasetMIDI(
-        files_paths=val_files,
-        tokenizer=tokenizer,
-        max_seq_len=max_seq_len,
-        bos_token_id=tokenizer["BOS_None"],
-        eos_token_id=tokenizer["EOS_None"],
-    )
-    test_dataset = DatasetMIDI(
-        files_paths=test_files,
-        tokenizer=tokenizer,
-        max_seq_len=max_seq_len,
-        bos_token_id=tokenizer["BOS_None"],
-        eos_token_id=tokenizer["EOS_None"],
-    )
+    train_dataset = MDataset(train_files,tokenizer)
+    test_dataset = MDataset(test_files, tokenizer)
+    val_dataset = MDataset(val_files, tokenizer)
+    # train_dataset = DatasetMIDI(
+    #     files_paths=train_files,
+    #     tokenizer=tokenizer,
+    #     max_seq_len=max_seq_len,
+    #     bos_token_id=tokenizer["BOS_None"],
+    #     eos_token_id=tokenizer["EOS_None"],
+    # )
+    # val_dataset = DatasetMIDI(
+    #     files_paths=val_files,
+    #     tokenizer=tokenizer,
+    #     max_seq_len=max_seq_len,
+    #     bos_token_id=tokenizer["BOS_None"],
+    #     eos_token_id=tokenizer["EOS_None"],
+    # )
+    # test_dataset = DatasetMIDI(
+    #     files_paths=test_files,
+    #     tokenizer=tokenizer,
+    #     max_seq_len=max_seq_len,
+    #     bos_token_id=tokenizer["BOS_None"],
+    #     eos_token_id=tokenizer["EOS_None"],
+    # )
 
     # tokenizer.
-    collator = DataCollator(
-        tokenizer.pad_token_id,
-        labels_pad_idx=tokenizer["PAD_None"],
-        copy_inputs_as_labels=True,
-        shift_labels=True,
-    )
+    # collator = DataCollator(
+    #     tokenizer.pad_token_id,
+    #     labels_pad_idx=tokenizer["PAD_None"],
+    #     copy_inputs_as_labels=True,
+    #     shift_labels=True,
+    # )
     
     train_sampler = DistributedSampler(dataset=train_dataset) if ddp else RandomSampler(train_dataset)
     train_dataloader = DataLoader(
         train_dataset,
         sampler=train_sampler,
         pin_memory=ddp,
-        drop_last=True,
-        collate_fn=collator,
+        # drop_last=False,
         batch_size=batch_size,
     )
 
@@ -110,8 +114,7 @@ def dataset_from(path: str,
         val_dataset,
         sampler=val_sampler,
         pin_memory=ddp,
-        drop_last=True,
-        collate_fn=collator,
+        # drop_last=True,
         batch_size=batch_size,
     )
 
@@ -120,8 +123,7 @@ def dataset_from(path: str,
         test_dataset,
         sampler=test_sampler,
         pin_memory=ddp,
-        drop_last=True,
-        collate_fn=collator,
+        # drop_last=True,
         batch_size=batch_size,
     )
 
