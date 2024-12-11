@@ -20,10 +20,16 @@ class MDataset(torch.utils.data.Dataset):
             eos_token_id=_tk["EOS_None"],
         )
         self.sliding_step = sliding_step if sliding_step is not None else seq_len // 2
-        self.next_step = {}
+        self.next_step = dict[int,int]()
         self.seq_len = seq_len
         self.cache = dict[int, Sequence[float]]()
 
+    def avg_position(self):
+        sum = 0
+        for k,v in self.next_step.items():
+            sum += v
+        return sum / len(self.next_step)
+    
     def __len__(self):
         return len(self.source)
 
@@ -52,11 +58,15 @@ class MDataset(torch.utils.data.Dataset):
             raw = self.source[index]
             tensor = raw["input_ids"]
             if tensor is None:
-                tensor = torch.zeros(10)
+                # print(raw)
+                # print("Input tensor is None. fuck.")
+                tensor = torch.zeros(10,dtype=torch.long)
             seq = tensor.tolist()
             seq = seq + [self.source.eos_token_id]
             self.cache[index] = np.array(seq)
+            # print(f"cachesize={len(self.cache):.4f}")
         else:
+            # print("命中")
             seq = self.cache[index]
 
         if index not in self.next_step:

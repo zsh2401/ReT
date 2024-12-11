@@ -2,12 +2,12 @@
 import torch
 from torch import nn
 
-from midiset import LMD_DATASET_PATH, NES_TRAIN_DATASET_PATH, dataset_from
+from t3.midiset import LMD_DATASET_PATH, NES_TRAIN_DATASET_PATH, dataset_from
 import tqdm
 import sys
 import datetime
 
-from model2 import MusicTransformer2
+from t3.model2 import MusicTransformer2
 
 TRAIN_CODE = "v4"
 # 训练循环

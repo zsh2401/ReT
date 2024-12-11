@@ -1,8 +1,8 @@
 import argparse
 
 import torch
-from midiset import tokenizer_
-from model2 import MusicTransformer2
+from t3.midiset import tokenizer_
+from t3.model2 import MusicTransformer2
 import pretty_midi
 from pydub import AudioSegment
 # 保存为 WAV 文件

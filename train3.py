@@ -11,7 +11,7 @@ import sys
 import datetime
 from torch.utils.data import DataLoader
 
-from model2 import MusicTransformer2
+from t3.model2 import MusicTransformer2
 
 TRAIN_CODE = "v3-with-decoder-only"
 

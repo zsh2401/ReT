@@ -1,7 +1,7 @@
 import sys
 import torch
 from dataset.vocab import get_vocab_size, idx_seq_to_token_seq, word2idx
-from model2 import MusicTransformer2  # 假设你的模型定义在 model.py 中
+from t3.model2 import MusicTransformer2  # 假设你的模型定义在 model.py 中
 
 # from midi_utils import save_midi  # 假设你有一个 save_midi 工具函数将序列保存为 MIDI
 

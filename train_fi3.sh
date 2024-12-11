@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+python -m torch.distributed.launch --nproc_per_node=2 --master_port 29502 -m t3.train --train-code="fi3" --dataset-scale=0.1 --d-model=1024 --num-heads=16 --dff=3072 --num-layers=12 --seq-len=2048 --batch-size=16
